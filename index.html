@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🥒 Pickles Board</title>
+<title>Pickles Board</title>
 <script src="data.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -290,7 +290,7 @@
   const p = D.portfolio;
   document.getElementById('app').innerHTML = `
     <div class="header">
-      <h1>🥒 Pickles Board</h1>
+      <h1><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" style="height:2.8rem;vertical-align:middle;margin-right:8px;margin-bottom:6px" aria-hidden="true"><ellipse cx="32" cy="32" rx="14" ry="26" fill="#4a9e4a"/><ellipse cx="32" cy="32" rx="10" ry="22" fill="#5dbc5d"/><ellipse cx="26" cy="20" rx="3.5" ry="2" fill="#3a7a3a" transform="rotate(-20 26 20)"/><ellipse cx="38" cy="26" rx="3.5" ry="2" fill="#3a7a3a" transform="rotate(15 38 26)"/><ellipse cx="25" cy="34" rx="3.5" ry="2" fill="#3a7a3a" transform="rotate(-10 25 34)"/><ellipse cx="39" cy="40" rx="3.5" ry="2" fill="#3a7a3a" transform="rotate(20 39 40)"/><ellipse cx="28" cy="46" rx="3" ry="1.8" fill="#3a7a3a" transform="rotate(-15 28 46)"/><ellipse cx="32" cy="8" rx="6" ry="4" fill="#7acc5a"/><ellipse cx="32" cy="56" rx="6" ry="4" fill="#7acc5a"/></svg>Pickles Board</h1>
       <div class="subtitle">Portfolio snapshot · ${p.asOf}</div>
       <div class="portfolio-stats">
         <div class="stat">
