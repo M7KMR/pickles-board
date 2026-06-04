@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🥒 Pickles Board</title>
+<script src="data.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0f0f1a;
+    color: #f0f0f0;
+    min-width: 900px;
+    padding: 32px;
+  }
+
+  /* ── HEADER ── */
+  .header { text-align: center; margin-bottom: 40px; }
+  .header h1 {
+    font-size: 3rem;
+    font-weight: 900;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, #a8ff78, #78ffd6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .header .subtitle { color: #888; margin-top: 4px; font-size: 0.9rem; }
+  .portfolio-stats {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 20px;
+  }
+  .stat {
+    background: #1a1a2e;
+    border: 1px solid #2a2a4a;
+    border-radius: 12px;
+    padding: 14px 28px;
+    text-align: center;
+  }
+  .stat-label { font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+  .stat-value { font-size: 1.5rem; font-weight: 700; margin-top: 4px; }
+
+  /* ── SECTION TITLES ── */
+  .section-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 2px;
+    background: linear-gradient(90deg, #2a2a4a, transparent);
+  }
+
+  /* ── LEADERBOARD ── */
+  .leaderboard {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 14px;
+    margin-bottom: 40px;
+  }
+  @media (max-width: 1100px) { .leaderboard { grid-template-columns: repeat(3, 1fr); } }
+
+  .chooser-card {
+    border-radius: 16px;
+    padding: 20px 14px;
+    text-align: center;
+    position: relative;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.15s, opacity 0.2s, box-shadow 0.15s;
+    user-select: none;
+  }
+  .chooser-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+  .chooser-card.rank-1 { border-color: gold; }
+  .chooser-card.rank-2 { border-color: silver; }
+  .chooser-card.rank-3 { border-color: #cd7f32; }
+  .chooser-card.active { box-shadow: 0 0 0 3px #fff4, 0 8px 24px rgba(0,0,0,0.4); transform: translateY(-4px); }
+  .chooser-card.dimmed { opacity: 0.35; transform: none; }
+
+  .rank-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.3rem;
+  }
+  .chooser-emoji { font-size: 2.2rem; margin-bottom: 6px; }
+  .chooser-name { font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 10px; }
+  .chooser-avg { font-size: 1.9rem; font-weight: 900; line-height: 1; margin-bottom: 6px; }
+  .chooser-total { font-size: 0.78rem; color: rgba(255,255,255,0.7); }
+  .chooser-picks { font-size: 0.72rem; color: rgba(255,255,255,0.45); margin-top: 4px; }
+
+  .c-ben    { background: linear-gradient(160deg, #1a3a1a, #2d6a2d); }
+  .c-baz    { background: linear-gradient(160deg, #1a2a3a, #2d4a7a); }
+  .c-willis { background: linear-gradient(160deg, #3a2a1a, #7a5a1a); }
+  .c-rick   { background: linear-gradient(160deg, #2a1a3a, #5a2a7a); }
+  .c-harps  { background: linear-gradient(160deg, #3a3a1a, #7a7a1a); }
+  .c-gammy  { background: linear-gradient(160deg, #3a1a2a, #7a2a5a); }
+
+  /* ── FILTER HINT ── */
+  .filter-hint {
+    text-align: center;
+    font-size: 0.78rem;
+    color: #555;
+    margin-top: -28px;
+    margin-bottom: 28px;
+  }
+
+  /* ── BEST / WORST ── */
+  .fame-shame {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 40px;
+  }
+  @media (max-width: 900px) { .fame-shame { grid-template-columns: 1fr; } }
+
+  .fame-panel, .shame-panel {
+    background: #1a1a2e;
+    border-radius: 16px;
+    padding: 24px;
+  }
+  .fame-panel  { border: 1px solid #2a5a2a; }
+  .shame-panel { border: 1px solid #5a2a2a; }
+  .panel-title { font-size: 1rem; font-weight: 800; margin-bottom: 14px; }
+
+  .pick-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #2a2a4a;
+  }
+  .pick-row:last-child { border-bottom: none; }
+  .pick-rank { font-size: 1.3rem; width: 30px; text-align: center; flex-shrink: 0; }
+  .pick-info { flex: 1; min-width: 0; }
+  .pick-name { font-weight: 600; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pick-meta { font-size: 0.72rem; color: #888; margin-top: 2px; }
+  .pick-pct  { font-size: 1.5rem; font-weight: 900; }
+  .pick-gbp  { font-size: 0.75rem; color: #aaa; text-align: right; }
+
+  /* ── TABLE ── */
+  .table-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .filter-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #1a1a2e;
+    border: 1px solid #3a3a6a;
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 0.8rem;
+    color: #ccc;
+  }
+  .clear-filter {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0 0 0 4px;
+    transition: color 0.15s;
+  }
+  .clear-filter:hover { color: #fff; }
+  .filter-badge.hidden, .stocks-count.hidden { display: none; }
+  .stocks-count { font-size: 0.78rem; color: #666; margin-left: auto; }
+
+  .stocks-table-wrap {
+    background: #1a1a2e;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #2a2a4a;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  thead th {
+    background: #12122a;
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #888;
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+    transition: color 0.15s;
+  }
+  thead th:hover { color: #ccc; }
+  thead th.num { text-align: right; }
+  thead th .sort-arrow { margin-left: 4px; opacity: 0.4; }
+  thead th.sort-asc .sort-arrow::after  { content: '↑'; opacity: 1; }
+  thead th.sort-desc .sort-arrow::after { content: '↓'; opacity: 1; }
+  thead th:not(.sort-asc):not(.sort-desc) .sort-arrow::after { content: '↕'; }
+
+  tbody tr { border-bottom: 1px solid #1e1e38; transition: background 0.1s; }
+  tbody tr:hover { background: #1e1e38; }
+  tbody tr.hidden { display: none; }
+  tbody td { padding: 10px 16px; }
+  tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  .gain { color: #4ade80; }
+  .loss { color: #f87171; }
+  .flat { color: #aaa; }
+  .pos  { color: #4ade80; }
+  .neg  { color: #f87171; }
+
+  .chooser-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .chooser-chip:hover { opacity: 0.8; }
+  .chip-ben    { background: #2d6a2d33; color: #86efac; border: 1px solid #2d6a2d; }
+  .chip-baz    { background: #2d4a7a33; color: #93c5fd; border: 1px solid #2d4a7a; }
+  .chip-willis { background: #7a5a1a33; color: #fcd34d; border: 1px solid #7a5a1a; }
+  .chip-rick   { background: #5a2a7a33; color: #c4b5fd; border: 1px solid #5a2a7a; }
+  .chip-harps  { background: #7a7a1a33; color: #fde68a; border: 1px solid #7a7a1a; }
+  .chip-gammy  { background: #7a2a5a33; color: #f9a8d4; border: 1px solid #7a2a5a; }
+  .chip-unknown { background: #33333333; color: #aaa; border: 1px solid #555; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+(function() {
+  const D = window.DATA;
+  const chooserMap = {};
+  D.choosers.forEach(c => chooserMap[c.id] = c);
+
+  function fmt(n, d=2) {
+    return (n >= 0 ? '+' : '-') + Math.abs(n).toFixed(d);
+  }
+  function fmtPct(n)  { return fmt(n) + '%'; }
+  function fmtGbp(n)  { return (n >= 0 ? '+£' : '-£') + Math.abs(n).toFixed(2); }
+  function colorCls(n){ return n > 0 ? 'gain' : n < 0 ? 'loss' : 'flat'; }
+  function signCls(n) { return n > 0 ? 'pos'  : n < 0 ? 'neg'  : ''; }
+
+  // ── Compute chooser stats ──
+  const chooserStats = {};
+  D.choosers.forEach(c => {
+    chooserStats[c.id] = { ...c, pcts: [], totalChange: 0, picks: 0 };
+  });
+  D.stocks.forEach(s => {
+    if (!s.chooser || !chooserStats[s.chooser]) return;
+    const cs = chooserStats[s.chooser];
+    cs.pcts.push(s.changePct);
+    cs.totalChange += s.change;
+    cs.picks++;
+  });
+  const ranked = Object.values(chooserStats)
+    .map(cs => ({ ...cs, avgPct: cs.pcts.length ? cs.pcts.reduce((a,b)=>a+b,0)/cs.pcts.length : 0 }))
+    .sort((a,b) => b.avgPct - a.avgPct);
+
+  const medals  = ['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣'];
+  const shameIcons = ['💩','😬','😅'];
+
+  const sortedByPct = [...D.stocks].sort((a,b) => b.changePct - a.changePct);
+  const top3 = sortedByPct.slice(0,3);
+  const bot3 = sortedByPct.slice(-3).reverse();
+
+  // ── State ──
+  let activeChooser = null;
+  let sortCol  = 'changePct';
+  let sortDir  = 'desc';
+
+  // ── Build DOM ──
+  const p = D.portfolio;
+  document.getElementById('app').innerHTML = `
+    <div class="header">
+      <h1>🥒 Pickles Board</h1>
+      <div class="subtitle">Portfolio snapshot · ${p.asOf}</div>
+      <div class="portfolio-stats">
+        <div class="stat">
+          <div class="stat-label">Total Value</div>
+          <div class="stat-value">£${p.totalValue.toLocaleString('en-GB',{minimumFractionDigits:2})}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Total Cost</div>
+          <div class="stat-value" style="color:#aaa">£${p.totalCost.toLocaleString('en-GB',{minimumFractionDigits:2})}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Total Gain / Loss</div>
+          <div class="stat-value ${signCls(p.totalChange)}">${fmtGbp(p.totalChange)}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Overall Return</div>
+          <div class="stat-value ${signCls(p.totalChangePct)}">${fmtPct(p.totalChangePct)}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">🏆 Leaderboard</div>
+    <div class="leaderboard" id="leaderboard">
+      ${ranked.map((cs,i) => `
+        <div class="chooser-card c-${cs.id} rank-${i+1}" data-id="${cs.id}" title="Click to filter by ${cs.name}">
+          <div class="rank-badge">${medals[i]}</div>
+          <div class="chooser-emoji">${cs.emoji}</div>
+          <div class="chooser-name">${cs.name}</div>
+          <div class="chooser-avg ${signCls(cs.avgPct)}">${fmtPct(cs.avgPct)}</div>
+          <div class="chooser-total ${signCls(cs.totalChange)}">${fmtGbp(cs.totalChange)} total</div>
+          <div class="chooser-picks">${cs.picks} pick${cs.picks!==1?'s':''}</div>
+        </div>`).join('')}
+    </div>
+    <div class="filter-hint">Click a card to filter · click again to clear</div>
+
+    <div class="section-title">📊 Hall of Fame &amp; Shame</div>
+    <div class="fame-shame">
+      <div class="fame-panel">
+        <div class="panel-title">🏆 Top Picks</div>
+        ${top3.map((s,i) => {
+          const c = s.chooser ? chooserMap[s.chooser] : null;
+          return `<div class="pick-row">
+            <div class="pick-rank">${medals[i]}</div>
+            <div class="pick-info">
+              <div class="pick-name">${s.name}</div>
+              <div class="pick-meta">${s.ticker} · ${c ? c.emoji+' '+c.name : '❓'}</div>
+            </div>
+            <div>
+              <div class="pick-pct gain">${fmtPct(s.changePct)}</div>
+              <div class="pick-gbp gain">${fmtGbp(s.change)}</div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="shame-panel">
+        <div class="panel-title">💀 Biggest Losses</div>
+        ${bot3.map((s,i) => {
+          const c = s.chooser ? chooserMap[s.chooser] : null;
+          return `<div class="pick-row">
+            <div class="pick-rank">${shameIcons[i]}</div>
+            <div class="pick-info">
+              <div class="pick-name">${s.name}</div>
+              <div class="pick-meta">${s.ticker} · ${c ? c.emoji+' '+c.name : '❓'}</div>
+            </div>
+            <div>
+              <div class="pick-pct loss">${fmtPct(s.changePct)}</div>
+              <div class="pick-gbp loss">${fmtGbp(s.change)}</div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="section-title">📋 All Stocks</div>
+    <div class="table-controls">
+      <div class="filter-badge hidden" id="filterBadge">
+        Showing: <span id="filterLabel"></span>
+        <button class="clear-filter" id="clearFilter" title="Clear filter">✕</button>
+      </div>
+      <div class="stocks-count" id="stocksCount"></div>
+    </div>
+    <div class="stocks-table-wrap">
+      <table id="stocksTable">
+        <thead>
+          <tr>
+            <th data-col="name">Stock <span class="sort-arrow"></span></th>
+            <th data-col="ticker">Ticker <span class="sort-arrow"></span></th>
+            <th data-col="chooser">Chooser <span class="sort-arrow"></span></th>
+            <th data-col="cost"   class="num">Cost (£) <span class="sort-arrow"></span></th>
+            <th data-col="value"  class="num">Value (£) <span class="sort-arrow"></span></th>
+            <th data-col="change" class="num">Change (£) <span class="sort-arrow"></span></th>
+            <th data-col="changePct" class="num sort-desc">Change (%) <span class="sort-arrow"></span></th>
+          </tr>
+        </thead>
+        <tbody id="stocksTbody"></tbody>
+      </table>
+    </div>
+  `;
+
+  // ── Render table ──
+  function renderTable() {
+    const cols = {
+      name:      s => s.name,
+      ticker:    s => s.ticker,
+      chooser:   s => (s.chooser ? chooserMap[s.chooser].name : 'Unknown'),
+      cost:      s => s.cost,
+      value:     s => s.value,
+      change:    s => s.change,
+      changePct: s => s.changePct,
+    };
+
+    const data = [...D.stocks].sort((a, b) => {
+      const va = cols[sortCol](a);
+      const vb = cols[sortCol](b);
+      const cmp = typeof va === 'string' ? va.localeCompare(vb) : va - vb;
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+
+    const visible = activeChooser ? data.filter(s => s.chooser === activeChooser) : data;
+
+    const tbody = document.getElementById('stocksTbody');
+    tbody.innerHTML = visible.map(s => {
+      const c = s.chooser ? chooserMap[s.chooser] : null;
+      const chipCls   = c ? `chip-${c.id}` : 'chip-unknown';
+      const chipLabel = c ? `${c.emoji} ${c.name}` : '❓ Unknown';
+      return `<tr>
+        <td>${s.name}</td>
+        <td style="color:#888;font-family:monospace;font-size:0.8rem">${s.ticker}</td>
+        <td><span class="chooser-chip ${chipCls}" data-chooser="${s.chooser||''}">${chipLabel}</span></td>
+        <td class="num">£${s.cost.toFixed(2)}</td>
+        <td class="num">£${s.value.toFixed(2)}</td>
+        <td class="num ${colorCls(s.change)}">${fmtGbp(s.change)}</td>
+        <td class="num ${colorCls(s.changePct)}">${fmtPct(s.changePct)}</td>
+      </tr>`;
+    }).join('');
+
+    // Update sort arrows
+    document.querySelectorAll('#stocksTable thead th').forEach(th => {
+      th.classList.remove('sort-asc','sort-desc');
+      if (th.dataset.col === sortCol) th.classList.add(sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+    });
+
+    // Update count
+    const countEl = document.getElementById('stocksCount');
+    countEl.textContent = activeChooser
+      ? `${visible.length} of ${D.stocks.length} stocks`
+      : `${D.stocks.length} stocks`;
+  }
+
+  // ── Filter state ──
+  function setFilter(id) {
+    activeChooser = id;
+    const badge   = document.getElementById('filterBadge');
+    const label   = document.getElementById('filterLabel');
+    const cards   = document.querySelectorAll('.chooser-card');
+
+    if (id) {
+      const c = chooserMap[id];
+      label.textContent = `${c.emoji} ${c.name}`;
+      badge.classList.remove('hidden');
+      cards.forEach(card => {
+        card.classList.toggle('active',  card.dataset.id === id);
+        card.classList.toggle('dimmed', card.dataset.id !== id);
+      });
+    } else {
+      badge.classList.add('hidden');
+      cards.forEach(card => { card.classList.remove('active','dimmed'); });
+    }
+    renderTable();
+  }
+
+  // ── Events: leaderboard cards ──
+  document.getElementById('leaderboard').addEventListener('click', e => {
+    const card = e.target.closest('.chooser-card');
+    if (!card) return;
+    const id = card.dataset.id;
+    setFilter(activeChooser === id ? null : id);
+  });
+
+  // ── Events: clear filter button ──
+  document.getElementById('clearFilter').addEventListener('click', () => setFilter(null));
+
+  // ── Events: chooser chips in table ──
+  document.getElementById('stocksTbody').addEventListener('click', e => {
+    const chip = e.target.closest('.chooser-chip');
+    if (!chip || !chip.dataset.chooser) return;
+    const id = chip.dataset.chooser;
+    setFilter(activeChooser === id ? null : id);
+  });
+
+  // ── Events: column sort ──
+  document.querySelectorAll('#stocksTable thead th[data-col]').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.col;
+      if (sortCol === col) {
+        sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortCol = col;
+        sortDir = ['cost','value','change','changePct'].includes(col) ? 'desc' : 'asc';
+      }
+      renderTable();
+    });
+  });
+
+  // ── Initial render ──
+  renderTable();
+})();
+</script>
+</body>
+</html>
