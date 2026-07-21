@@ -2,3 +2,4 @@
 *.csv
 choosers.md
 data.json
+dist/
