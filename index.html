@@ -338,6 +338,43 @@
   .chip-harps   { background: #7a7a1a33; color: #fde68a; border: 1px solid #7a7a1a; }
   .chip-gammy   { background: #7a2a5a33; color: #f9a8d4; border: 1px solid #7a2a5a; }
   .chip-unknown { background: #33333333; color: #aaa;    border: 1px solid #555; }
+
+  .formerly-badge {
+    display: inline-block;
+    margin-left: 4px;
+    width: 13px;
+    height: 13px;
+    line-height: 13px;
+    font-size: 0.65rem;
+    font-style: normal;
+    text-align: center;
+    border-radius: 50%;
+    background: #33333380;
+    color: #aaa;
+    border: 1px solid #555;
+    cursor: help;
+    vertical-align: 1px;
+  }
+  /* Single shared tooltip, positioned via JS with `position: fixed` so it can
+     never be clipped by an ancestor's `overflow: hidden` (several name cells
+     use that for text-ellipsis truncation). */
+  #formerlyTooltip {
+    position: fixed;
+    background: #0f0f1e;
+    color: #eee;
+    padding: 5px 9px;
+    border-radius: 6px;
+    border: 1px solid #444;
+    font-size: 0.72rem;
+    font-weight: 500;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    opacity: 0;
+    transition: opacity 0.12s;
+  }
+  #formerlyTooltip.visible { opacity: 1; }
 </style>
 </head>
 <body>
@@ -354,6 +391,13 @@
   function fmtGbp(n)    { return (n >= 0 ? '+£' : '-£') + Math.abs(n).toFixed(2); }
   function colorCls(n)  { return n > 0 ? 'gain' : n < 0 ? 'loss' : 'flat'; }
   function signCls(n)   { return n > 0 ? 'pos'  : n < 0 ? 'neg'  : ''; }
+
+  // Renders a stock's name, with a tappable/hoverable "formerly known as" badge
+  // when `formerly` is set (e.g. corporate renames/rebrands like Zinnwald Lithium → AMG).
+  function nameHtml(s) {
+    if (!s.formerly) return s.name;
+    return `${s.name}<span class="formerly-badge" tabindex="0" data-formerly="Formerly ${s.formerly}">ℹ</span>`;
+  }
 
   // ── Chooser stats ──
   const chooserStats = {};
@@ -507,7 +551,7 @@
           return `<div class="pick-row">
             <div class="pick-rank">${medals[i]}</div>
             <div class="pick-info">
-              <div class="pick-name">${s.name}</div>
+              <div class="pick-name">${nameHtml(s)}</div>
               <div class="pick-meta">${s.ticker} · ${c ? c.emoji+' '+c.name : '❓'}</div>
             </div>
             <div class="pick-right">
@@ -524,7 +568,7 @@
           return `<div class="pick-row">
             <div class="pick-rank">${shameIcons[i]}</div>
             <div class="pick-info">
-              <div class="pick-name">${s.name}</div>
+              <div class="pick-name">${nameHtml(s)}</div>
               <div class="pick-meta">${s.ticker} · ${c ? c.emoji+' '+c.name : '❓'}</div>
             </div>
             <div class="pick-right">
@@ -546,7 +590,7 @@
           return `<div class="pick-row">
             <div class="pick-rank">${['🥇','🥈','🥉'][i]}</div>
             <div class="pick-info">
-              <div class="pick-name">${s.name}</div>
+              <div class="pick-name">${nameHtml(s)}</div>
               <div class="pick-meta">${s.ticker} · ${c ? c.emoji+' '+c.name : '❓'}</div>
               <div class="pick-journey">was <span class="${signCls(s.prevPct)}">${fmtPct(s.prevPct)}</span> (${prettyDate(prev.asOf)}) → now <span class="${signCls(s.changePct)}">${fmtPct(s.changePct)}</span> (${prettyDate(D.portfolio.asOf)})</div>
             </div>
@@ -564,7 +608,7 @@
           return `<div class="pick-row">
             <div class="pick-rank">${['💩','😬','😅'][i]}</div>
             <div class="pick-info">
-              <div class="pick-name">${s.name}</div>
+              <div class="pick-name">${nameHtml(s)}</div>
               <div class="pick-meta">${s.ticker} · ${c ? c.emoji+' '+c.name : '❓'}</div>
               <div class="pick-journey">was <span class="${signCls(s.prevPct)}">${fmtPct(s.prevPct)}</span> (${prettyDate(prev.asOf)}) → now <span class="${signCls(s.changePct)}">${fmtPct(s.changePct)}</span> (${prettyDate(D.portfolio.asOf)})</div>
             </div>
@@ -629,7 +673,7 @@
             const cls   = c ? `chip-${c.id}` : 'chip-unknown';
             const label = c ? `${c.emoji} ${c.name}` : '❓ Unknown';
             return `<tr>
-              <td>${s.name}</td>
+              <td>${nameHtml(s)}</td>
               <td style="color:#888;font-family:monospace;font-size:0.8rem">${s.ticker}</td>
               <td><span class="chooser-chip ${cls}">${label}</span></td>
               <td class="num unknown">?</td>
@@ -649,7 +693,7 @@
         const label = c ? `${c.emoji} ${c.name}` : '❓ Unknown';
         return `<div class="stock-card">
           <div class="sc-left">
-            <div class="sc-name">${s.name}</div>
+            <div class="sc-name">${nameHtml(s)}</div>
             <div class="sc-bottom">
               <span class="sc-ticker">${s.ticker}</span>
               <span class="chooser-chip ${cls}">${label}</span>
@@ -695,7 +739,7 @@
     // Table rows
     document.getElementById('stocksTbody').innerHTML = visible.map(s => `
       <tr>
-        <td>${s.name}</td>
+        <td>${nameHtml(s)}</td>
         <td style="color:#888;font-family:monospace;font-size:0.8rem">${s.ticker}</td>
         <td>${chip(s)}</td>
         <td class="num">£${s.cost.toFixed(2)}</td>
@@ -708,7 +752,7 @@
     document.getElementById('stockCards').innerHTML = visible.map(s => `
       <div class="stock-card">
         <div class="sc-left">
-          <div class="sc-name">${s.name}</div>
+          <div class="sc-name">${nameHtml(s)}</div>
           <div class="sc-bottom">
             <span class="sc-ticker">${s.ticker}</span>
             ${chip(s)}
@@ -761,6 +805,60 @@
   });
 
   document.getElementById('clearFilter').addEventListener('click', () => setFilter(null));
+
+  // "Formerly known as" badges: one shared `position: fixed` tooltip, positioned
+  // via JS from the badge's bounding rect. Fixed positioning (not CSS ::after)
+  // is required because badges live inside `overflow: hidden` name cells.
+  const formerlyTip = document.createElement('div');
+  formerlyTip.id = 'formerlyTooltip';
+  document.body.appendChild(formerlyTip);
+  let formerlyTipOwner = null;
+
+  function showFormerlyTip(badge) {
+    formerlyTip.textContent = badge.dataset.formerly;
+    formerlyTip.classList.add('visible');
+    const r = formerlyTip.getBoundingClientRect(); // width/height only reliable once visible
+    const br = badge.getBoundingClientRect();
+    let left = br.left + br.width / 2 - r.width / 2;
+    left = Math.max(4, Math.min(left, window.innerWidth - r.width - 4));
+    let top = br.top - r.height - 8;
+    if (top < 4) top = br.bottom + 8; // flip below if no room above
+    formerlyTip.style.left = `${left}px`;
+    formerlyTip.style.top = `${top}px`;
+    formerlyTipOwner = badge;
+  }
+  function hideFormerlyTip() {
+    formerlyTip.classList.remove('visible');
+    formerlyTipOwner = null;
+  }
+
+  document.addEventListener('mouseover', e => {
+    const badge = e.target.closest('.formerly-badge');
+    if (badge) showFormerlyTip(badge);
+  });
+  document.addEventListener('mouseout', e => {
+    if (e.target.closest('.formerly-badge')) hideFormerlyTip();
+  });
+  document.addEventListener('focusin', e => {
+    const badge = e.target.closest('.formerly-badge');
+    if (badge) showFormerlyTip(badge);
+  });
+  document.addEventListener('focusout', e => {
+    if (e.target.closest('.formerly-badge')) hideFormerlyTip();
+  });
+  document.addEventListener('click', e => {
+    const badge = e.target.closest('.formerly-badge');
+    if (badge) {
+      // Always show (don't toggle): a real mouse fires `mouseover` immediately
+      // before `click` on the same interaction, so toggling here would cancel
+      // out the hover-triggered show that just happened.
+      e.stopPropagation();
+      showFormerlyTip(badge);
+    } else if (formerlyTipOwner) {
+      hideFormerlyTip();
+    }
+  });
+  window.addEventListener('scroll', () => { if (formerlyTipOwner) hideFormerlyTip(); }, { passive: true });
 
   function chipClickHandler(e) {
     const chip = e.target.closest('.chooser-chip');

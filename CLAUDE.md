@@ -28,7 +28,7 @@ A stock-picking leaderboard dashboard for a group of 6 friends. Each person pick
 `window.DATA` (in `data.js`) has these keys:
 
 - `choosers` — the 6 people (see table above).
-- `stocks` — current holdings. Each: `ticker, name, exchange, chooser, quantity, price, currency, value, cost, change, changePct, todayPct`. Optional `formerly` (string) records what a holding used to be before a rename/rebrand/switch (e.g. CNSL `"Omega Diagnostics"`), unused by rendering but preserved as history.
+- `stocks` — current holdings. Each: `ticker, name, exchange, chooser, quantity, price, currency, value, cost, change, changePct, todayPct`. Optional `formerly` (string) records what a holding used to be before a rename/rebrand/switch (e.g. CNSL `"Omega Diagnostics"`, AMG `"Zinnwald Lithium"`). Rendered in `index.html` as a small ℹ badge next to the stock name (see `nameHtml()`) — click/tap or hover to see "Formerly {name}" in a tooltip. `exited` entries support it too (same field, same renderer) even though none currently use it.
 - `exited` — sold positions no longer held. Each: `ticker, name, chooser` only. Rendered in a table at the bottom with `?` for cost/value/change (we don't track exit prices).
 - `previous` — the **prior** snapshot, used for the "since last update" features (headline delta, leaderboard rank arrows, Biggest Movers). Shape: `{ asOf, portfolio: { totalValue, totalChangePct }, stocks: [ { ticker, chooser, changePct } ] }`. All comparison UI is gated on `D.previous` existing — remove it and those sections vanish cleanly.
 - `portfolio` — `totalValue, totalCost, totalChange, totalChangePct, cash, asOf`.
